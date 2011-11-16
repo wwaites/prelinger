@@ -17,7 +17,7 @@ def mkdirs()
 end
 
 def fetch_ids(sources, fields, rows="50")
-  resource = "http://www.archive.org/advancedsearch.php?q=#{SEARCH}#{fields}&rows=#{rows}&page=1&output=json&save=yes")
+  resource = "http://www.archive.org/advancedsearch.php?q=#{SEARCH}#{fields}&rows=#{rows}&page=1&output=json&save=yes"
   sources.puts(resource + "\n") 
   url = URI.parse(resource)
   data = url.read
