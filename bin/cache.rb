@@ -16,25 +16,29 @@ def mkdirs()
   end
 end
 
-def fetch_ids(fields, rows="50")
-  url = URI.parse( "http://www.archive.org/advancedsearch.php?q=#{SEARCH}#{fields}&rows=#{rows}&page=1&output=json&save=yes")  
+def fetch_ids(sources, fields, rows="50")
+  resource = "http://www.archive.org/advancedsearch.php?q=#{SEARCH}#{fields}&rows=#{rows}&page=1&output=json&save=yes")
+  sources.puts(resource + "\n") 
+  url = URI.parse(resource)
   data = url.read
   return data
 end
 
-def fetch_file(id, type="meta")
-  url = URI.parse( "http://www.archive.org/download/#{id}/#{id}_#{type}.xml" )
+def fetch_file(sources, id, type="meta")
+  resource = "http://www.archive.org/download/#{id}/#{id}_#{type}.xml"
+  sources.puts(resource + "\n")
+  url = URI.parse(resource)
   data = url.read
   return data
 end
 
-def crawl(json)
+def crawl(sources, json)
   puts "Crawling #{ json["response"]["numFound"] } records"
   json["response"]["docs"].each do |result|
     ["meta", "files", "reviews"].each do |stage|
       begin
         File.open( "#{ARGV[0]}/#{stage}/#{result["identifier"]}.xml", "w") do |f|
-          data = fetch_file( result["identifier"], stage )
+          data = fetch_file( sources, result["identifier"], stage )
           f.puts( data )
         end
       rescue => e
@@ -48,11 +52,13 @@ end
 
 mkdirs()
 
-#cache identifiers locally
-File.open("#{ARGV[0]}/ids.json", "w") do |f|
-  f.puts fetch_ids(ID_FIELD_ONLY, 2500)
-end
+File.open("#{ARGV[0]}/sources.txt", "w") do |s|
+  #cache identifiers locally
+  File.open("#{ARGV[0]}/ids.json", "w") do |f|
+    f.puts fetch_ids(s, ID_FIELD_ONLY, 2500)
+  end
 
-#parse and crawl
-json = JSON.load( File.new( "#{ARGV[0]}/ids.json") )
-crawl(json)
+  #parse and crawl
+  json = JSON.load( File.new( "#{ARGV[0]}/ids.json") )
+  crawl(s, json)
+end
